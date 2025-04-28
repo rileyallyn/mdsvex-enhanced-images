@@ -1,5 +1,5 @@
 import type { Root } from 'hast'
-import { sep } from 'path'
+import { sep } from 'node:path'
 import type { Plugin } from 'unified'
 import { type Test, visit } from 'unist-util-visit'
 
@@ -18,20 +18,20 @@ function escapeHtmlAttribute(value: string) {
 
 export const defaultResolverFactory =
   (relativeHandler = (path: string) => `.${sep}${path}`) =>
-  (path: string) => {
-    if (
-      path.startsWith('http://') ||
-      path.startsWith('https://') ||
-      path.startsWith('$') ||
-      path.startsWith('@') ||
-      path.startsWith(`.${sep}`) ||
-      path.startsWith(`..${sep}`)
-    ) {
-      return path
-    } else {
-      return relativeHandler(path)
+    (path: string) => {
+      if (
+        path.startsWith('http://') ||
+        path.startsWith('https://') ||
+        path.startsWith('$') ||
+        path.startsWith('@') ||
+        path.startsWith(`.${sep}`) ||
+        path.startsWith(`..${sep}`)
+      ) {
+        return path
+      } else {
+        return relativeHandler(path)
+      }
     }
-  }
 
 export const enhancedImages: Plugin<[Partial<Config>?], any> = (config) => {
   const resolvedConfig = {
@@ -47,20 +47,29 @@ export const enhancedImages: Plugin<[Partial<Config>?], any> = (config) => {
         return;
       }
 
-      const url = resolvedConfig.resolve(node.url)
+      // const imageModule = import.meta.glob(node.url, {
+      //   eager: true,
+      //   query: {
+      //     enhanced: true
+      //   }
+      // })
+
       node.type = 'html'
-      let imgHtml = `<enhanced:img src="${url}"`
-      
+      // const resolvedImageModule = Object.entries(imageModule)[0][1] as {
+      //   default: string
+      // }
+      let imgHtml = `<enhanced:img src="${node.url}"`
+
       if (node.alt !== null) {
         imgHtml += ` alt="${escapeHtmlAttribute(node.alt)}"`
       }
-      
+
       if (node.title !== null && node.title !== undefined && node.title !== '') {
         imgHtml += ` title="${escapeHtmlAttribute(node.title)}"`
       }
-      
+
       imgHtml += ` />`
-      
+
       node.value = imgHtml
     })
 
